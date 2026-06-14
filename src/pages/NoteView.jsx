@@ -40,7 +40,13 @@ export const NoteView = () => {
 
   const owner = getTopicByFolder(note.folder);
   const body = stripLeadingH1(note.raw);
-  const images = getFolderImages(note.folder).filter((img) => !note.raw.includes(img.name));
+  // Only show images that belong to this note (share its file-name prefix,
+  // e.g. Day2_Foo.png / Day2_Foo_Diagram.png for Day2_Foo.md) and aren't
+  // already referenced inline — so sibling notes in the same folder don't
+  // leak their visuals into each other.
+  const images = getFolderImages(note.folder)
+    .filter((img) => img.name.replace(/\.[^.]+$/, '').startsWith(note.fileName))
+    .filter((img) => !note.raw.includes(img.name));
 
   return (
     <div className="min-h-screen bg-gradient-light dark:bg-gradient-dark">
