@@ -25,6 +25,7 @@ dist-ssr/
 # IDE and Editor files
 .vscode/
 .idea/
+.claude/settings.local.json
 *.suo
 .eslintcache
 *.vscode-settings.json

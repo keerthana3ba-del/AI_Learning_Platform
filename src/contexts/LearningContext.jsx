@@ -1,6 +1,13 @@
-import { createContext, useContext, useState } from 'react';
+import { createContext, useContext, useState, useEffect } from 'react';
 
 const LearningContext = createContext();
+
+const getInitialDarkMode = () => {
+  if (typeof window === 'undefined') return false;
+  const stored = localStorage.getItem('darkMode');
+  if (stored !== null) return stored === 'true';
+  return window.matchMedia('(prefers-color-scheme: dark)').matches;
+};
 
 export const LearningProvider = ({ children }) => {
   const [learningData, setLearningData] = useState({
@@ -14,7 +21,16 @@ export const LearningProvider = ({ children }) => {
     projects: [],
   });
 
-  const [darkMode, setDarkMode] = useState(false);
+  const [darkMode, setDarkMode] = useState(getInitialDarkMode);
+
+  // Apply the theme to <html> (Tailwind class strategy) and <body> (gradient).
+  useEffect(() => {
+    const root = document.documentElement;
+    root.classList.toggle('dark', darkMode);
+    document.body.classList.toggle('dark', darkMode);
+    document.body.classList.toggle('light', !darkMode);
+    localStorage.setItem('darkMode', String(darkMode));
+  }, [darkMode]);
 
   const updateLearningData = (key, value) => {
     setLearningData(prev => ({ ...prev, [key]: value }));
