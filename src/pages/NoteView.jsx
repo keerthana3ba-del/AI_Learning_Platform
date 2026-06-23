@@ -18,6 +18,9 @@ const NotFound = () => (
 /** Remove the leading H1 from the body (we show it in the header instead). */
 const stripLeadingH1 = (raw) => raw.replace(/^\s*#\s+.+\n?/, '');
 
+/** Escape a string for safe use inside a RegExp. */
+const escapeRegExp = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
 export const NoteView = () => {
   const params = useParams();
   const noteId = params['*'];
@@ -42,11 +45,15 @@ export const NoteView = () => {
   const body = stripLeadingH1(note.raw);
   // Only show images that belong to this note (share its file-name prefix,
   // e.g. Day2_Foo.png / Day2_Foo_Diagram.png for Day2_Foo.md) and aren't
-  // already referenced inline — so sibling notes in the same folder don't
-  // leak their visuals into each other.
+  // already embedded inline — so sibling notes in the same folder don't
+  // leak their visuals into each other. We look for a real markdown image
+  // embed `![...](...name)`, not just any text mention of the filename
+  // (a prose reference to the file shouldn't hide it from the gallery).
+  const isEmbeddedInline = (name) =>
+    new RegExp(`!\\[[^\\]]*\\]\\([^)]*${escapeRegExp(name)}[^)]*\\)`).test(note.raw);
   const images = getFolderImages(note.folder)
     .filter((img) => img.name.replace(/\.[^.]+$/, '').startsWith(note.fileName))
-    .filter((img) => !note.raw.includes(img.name));
+    .filter((img) => !isEmbeddedInline(img.name));
 
   return (
     <div className="min-h-screen bg-gradient-light dark:bg-gradient-dark">
